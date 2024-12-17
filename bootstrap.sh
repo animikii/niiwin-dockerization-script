@@ -58,7 +58,7 @@ main() {
 install_dockerized_niiwin() {
     need_cmd git
     need_cmd curl
-    need_cmd docker-compose
+    need_cmd docker
     need_env_var BUNDLE_GEM__FURY__IO
 
     local name="$1"
