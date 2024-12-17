@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
 
-# This installation script was stolen from Vector (https://vector.dev), who
-# stole it from Rust (https://www.rust-lang.org). It's meant to run on bash that
-# ships with macOS (i.e. probably not the latest version).
-
 set -u
 set -e
 
