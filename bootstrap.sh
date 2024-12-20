@@ -69,15 +69,15 @@ install_dockerized_niiwin() {
     cd $name
     ensure git checkout $latest_niiwin_version
 
-    local name_with_dashes=$(echo "$name" | tr '_' '-') # ex: my-app
-    local new_module_name=$(echo "$name" | awk -F '_' '{ for (i=1; i<=NF; i++) $i = toupper(substr($i,1,1)) substr($i,2) } 1' OFS="") # ex: MyApp
+    local kebob_case_name=$(echo "$name" | tr '_' '-') # ex: my-app
+    local camel_case_name=$(echo "$name" | awk -F '_' '{ for (i=1; i<=NF; i++) $i = toupper(substr($i,1,1)) substr($i,2) } 1' OFS="") # ex: MyApp
 
-    printf "%s Renaming the project from HelloApp to $new_module_name\n"
+    printf "%s Renaming the project from HelloApp to $camel_case_name\n"
     find . -type f -exec \
     perl -i \
         -pe "s/hello_app/${name}/g;" \
-        -pe "s/hello-app/${name_with_dashes}/g;" \
-        -pe "s/HelloApp/${new_module_name}/g;" {} +
+        -pe "s/hello-app/${kebob_case_name}/g;" \
+        -pe "s/HelloApp/${camel_case_name}/g;" {} +
 
     printf "%s Setting up Gemfury token\n"
     ensure sed "s/a1a1a1\-a1a1a1a1a1a1a1a1a1a1a1a1a1/$BUNDLE_GEM__FURY__IO/g" ".env.example" > ".env" 
@@ -85,8 +85,10 @@ install_dockerized_niiwin() {
     printf "%s Setting up git author information\n"
     local local_git_email=`git config --get user.email` || echo "person@animikii.com"
     local local_git_name=`git config --get user.name` || echo "Animikii Team Member"
-    ensure sed "s/person\@animikii\.com/$local_git_email/g" ".env" > ".env.tmp" && mv .env.tmp .env
-    ensure sed "s/Animikii Team Member/$local_git_name/g" ".env" > ".env.tmp" && mv .env.tmp .env
+    # The steps below are optional, because it is possible for this value to be configured
+    # manually in .env
+    sed "s/person\@animikii\.com/$local_git_email/g" ".env" > ".env.tmp" && mv .env.tmp .env
+    sed "s/Animikii Team Member/$local_git_name/g" ".env" > ".env.tmp" && mv .env.tmp .env
 
 
     printf "%s Creating initial commit\n"
