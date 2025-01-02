@@ -86,26 +86,26 @@ install_dockerized_niiwin() {
     local local_git_name=`git config --get user.name` || echo "Animikii Team Member"
     # The steps below are optional, because it is possible for this value to be configured
     # manually in .env
-    sed "s/person\@animikii\.com/$local_git_email/g" ".env" > ".env.tmp" && mv .env.tmp .env
-    sed "s/Animikii Team Member/$local_git_name/g" ".env" > ".env.tmp" && mv .env.tmp .env
+    ensure sed "s/person\@animikii\.com/$local_git_email/g" ".env" > ".env.tmp" && mv .env.tmp .env
+    ensure sed "s/Animikii Team Member/$local_git_name/g" ".env" > ".env.tmp" && mv .env.tmp .env
 
 
     printf "%s Creating initial commit\n"
-    rm -rf .git/
-    git init
-    git add .
-    git commit -am "Initial commit"
+    ensure rm -rf .git/
+    ensure git init
+    ensure git add .
+    ensure git commit -am "Initial commit"
 
     # Build the image and start the containers in the background so that we can run rails db:setup
-    docker compose up --build --detach --remove-orphans
+    ensure docker compose up --build --detach --remove-orphans
     # Create and seed database
-    ./run rails db:setup
+    ensure ./run rails db:setup
     # Build js and css assets
-    ./run yarn:install
-    ./run yarn:build
+    ensure ./run yarn:install
+    ensure ./run yarn:build
     # Restart the containers without -d so that we can see the logs
-    docker compose down
-    docker compose up
+    ensure docker compose down
+    ensure docker compose up
 }
 
 say() {
