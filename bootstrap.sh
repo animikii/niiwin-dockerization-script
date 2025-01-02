@@ -101,8 +101,8 @@ install_dockerized_niiwin() {
     # Create and seed database
     ./run rails db:setup
     # Build js and css assets
-    ./run yarn install
-    ./run yarn build
+    ./run yarn:install
+    ./run yarn:build
     # Restart the containers without -d so that we can see the logs
     docker compose down
     docker compose up
