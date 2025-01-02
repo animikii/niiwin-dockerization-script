@@ -45,7 +45,7 @@ main() {
     local dockerize=no
 
     if [ -x $name ]; then
-      err "Usage: bootstrap <app name>"
+      err "Usage: ./bootstrap.sh your_app_name"
     fi
 
     if [ -d "$name" ]; then
