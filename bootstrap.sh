@@ -61,7 +61,7 @@ install_dockerized_niiwin() {
     need_env_var BUNDLE_GEM__FURY__IO
 
     local name="$1"
-    local latest_niiwin_version="3.1.0" # TODO: Change this to the latest available template
+    local latest_niiwin_version="3.1.1" # TODO: Change this to the latest available template
 
     printf "%s Cloning the source template for niiwin $latest_niiwin_version into $name\n"
     ensure git clone git@github.com:animikii/dockerized-niiwin.git $name
