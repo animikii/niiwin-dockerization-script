@@ -42,7 +42,6 @@ main() {
 
     local prompt=yes
     local name=$1
-    local dockerize=no
 
     if [ -x $name ]; then
       err "Usage: ./bootstrap.sh your_app_name"
