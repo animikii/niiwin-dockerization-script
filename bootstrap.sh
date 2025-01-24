@@ -108,7 +108,7 @@ install_dockerized_niiwin() {
 }
 
 say() {
-    printf 'boostrap.sh: %s\n' "$1"
+    printf 'bootstrap.sh: %s\n' "$1"
 }
 
 err() {
