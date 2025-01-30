@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-set -u
-set -e
+# Set failure modes. Details: https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
+set -euxo pipefail
 
 _divider="--------------------------------------------------------------------------------"
 _prompt=">>>"
@@ -37,76 +37,6 @@ $_divider
 EOF
 }
 
-main() {
-    header
-
-    local prompt=yes
-    local name=$1
-
-    if [ -x $name ]; then
-      err "Usage: ./bootstrap.sh your_app_name"
-    fi
-
-    if [ -d "$name" ]; then
-      err "Directory $name already exists."
-    fi
-
-    install_dockerized_niiwin "$name"
-}
-
-install_dockerized_niiwin() {
-    need_cmd git
-    need_cmd docker
-    need_env_var BUNDLE_GEM__FURY__IO
-
-    local name="$1"
-    local latest_niiwin_version="3.2.0" # Change this to the latest available template
-
-    printf "%s Cloning the source template for niiwin $latest_niiwin_version into $name\n"
-    ensure git clone git@github.com:animikii/dockerized-niiwin.git $name
-    cd $name
-    ensure git checkout $latest_niiwin_version
-
-    local kebob_case_name=$(echo "$name" | tr '_' '-') # ex: my-app
-    local camel_case_name=$(echo "$name" | awk -F '_' '{ for (i=1; i<=NF; i++) $i = toupper(substr($i,1,1)) substr($i,2) } 1' OFS="") # ex: MyApp
-
-    printf "%s Renaming the project from HelloApp to $camel_case_name\n"
-    find . -type f -exec \
-    perl -i \
-        -pe "s/hello_app/${name}/g;" \
-        -pe "s/hello-app/${kebob_case_name}/g;" \
-        -pe "s/HelloApp/${camel_case_name}/g;" {} +
-
-    printf "%s Setting up Gemfury token\n"
-    ensure sed "s/a1a1a1\-a1a1a1a1a1a1a1a1a1a1a1a1a1/$BUNDLE_GEM__FURY__IO/g" ".env.example" > ".env" 
-
-    printf "%s Setting up git author information\n"
-    local local_git_email=`git config --get user.email` || echo "person@animikii.com"
-    local local_git_name=`git config --get user.name` || echo "Animikii Team Member"
-    # The steps below are optional, because it is possible for this value to be configured
-    # manually in .env
-    ensure sed "s/person\@animikii\.com/$local_git_email/g" ".env" > ".env.tmp" && mv .env.tmp .env
-    ensure sed "s/Animikii Team Member/$local_git_name/g" ".env" > ".env.tmp" && mv .env.tmp .env
-
-
-    printf "%s Creating initial commit\n"
-    ensure rm -rf .git/
-    ensure git init
-    ensure git add .
-    ensure git commit -am "Initial commit"
-
-    # Build the image and start the containers in the background so that we can run rails db:setup
-    ensure docker compose up --build --detach --remove-orphans
-    # Create and seed database
-    ensure ./run rails db:setup
-    # Build js and css assets
-    ensure ./run yarn:install
-    ensure ./run yarn:build
-    # Restart the containers without -d so that we can see the logs
-    ensure docker compose down
-    ensure docker compose up
-}
-
 say() {
     printf 'bootstrap.sh: %s\n' "$1"
 }
@@ -127,7 +57,7 @@ need_env_var() {
 
 need_cmd() {
     if ! check_cmd "$1"; then
-        err "need '$1' (command not found)"
+        err "'$1' (command not found)."
     fi
 }
 
@@ -135,18 +65,64 @@ check_cmd() {
     command -v "$1" > /dev/null 2>&1
 }
 
-# Run a command that should never fail. If the command fails execution
-# will immediately terminate with an error showing the failing
-# command.
-ensure() {
-    if ! "$@"; then err "command failed: $*"; fi
-}
+header
 
-# This is just for indicating that commands' results are being
-# intentionally ignored. Usually, because it's being executed
-# as part of error handling.
-ignore() {
-    "$@"
-}
+if (( $# != 1 )); then
+    err "Usage: ./bootstrap.sh -s your_app_name"
+fi
 
-main "$@" || exit 1
+name=$1
+
+if [ -d $name ]; then
+    err "Directory $name already exists."
+fi
+
+need_cmd git
+need_cmd docker
+need_env_var BUNDLE_GEM__FURY__IO
+
+latest_niiwin_version="3.2.0" # Change this to the latest available template
+
+printf "%s Cloning the source template for niiwin $latest_niiwin_version into $name\n"
+git clone git@github.com:animikii/dockerized-niiwin.git $name
+cd $name
+git checkout $latest_niiwin_version
+
+kebob_case_name=$(echo "$name" | tr '_' '-') # ex: my-app
+camel_case_name=$(echo "$name" | awk -F '_' '{ for (i=1; i<=NF; i++) $i = toupper(substr($i,1,1)) substr($i,2) } 1' OFS="") # ex: MyApp
+
+printf "%s Renaming the project from HelloApp to $camel_case_name\n"
+find . -type f -exec \
+perl -i \
+    -pe "s/hello_app/${name}/g;" \
+    -pe "s/hello-app/${kebob_case_name}/g;" \
+    -pe "s/HelloApp/${camel_case_name}/g;" {} +
+
+printf "%s Setting up Gemfury token\n"
+sed "s/a1a1a1\-a1a1a1a1a1a1a1a1a1a1a1a1a1/$BUNDLE_GEM__FURY__IO/g" ".env.example" > ".env" 
+
+printf "%s Setting up git author information\n"
+local_git_email=`git config --get user.email` || echo "person@animikii.com"
+local_git_name=`git config --get user.name` || echo "Animikii Team Member"
+# The steps below are optional, because it is possible for this value to be configured
+# manually in .env
+sed "s/person\@animikii\.com/$local_git_email/g" ".env" > ".env.tmp" && mv .env.tmp .env
+sed "s/Animikii Team Member/$local_git_name/g" ".env" > ".env.tmp" && mv .env.tmp .env
+
+
+printf "%s Creating initial commit\n"
+rm -rf .git/
+git init
+git add .
+git commit -am "Initial commit"
+
+# Build the image and start the containers in the background so that we can run rails db:setup
+docker compose up --build --detach --remove-orphans
+# Create and seed database
+./run rails db:setup
+# Build js and css assets
+./run yarn:install
+./run yarn:build
+# Restart the containers without detaching so that we can see the logs
+docker compose down
+docker compose up --remove-orphans
