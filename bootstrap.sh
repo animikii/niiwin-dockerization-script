@@ -81,6 +81,12 @@ need_cmd git
 need_cmd docker
 need_env_var BUNDLE_GEM__FURY__IO
 
+printf 'niiwin-init: %s\n' "$1"
+
+if lsof -Pi :8000 -sTCP:LISTEN -t >/dev/null ; then
+    err "port 8000 is already in use."
+fi
+
 latest_niiwin_version="3.2.0" # Change this to the latest available template
 
 printf "%s Cloning the source template for niiwin $latest_niiwin_version into $name\n"
