@@ -7,7 +7,7 @@ _divider="----------------------------------------------------------------------
 _prompt=">>>"
 _indent="   "
 
-header() {
+niiwin_ascii() {
     cat 1>&2 <<EOF
 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▒▒▒▒▒▒▒░░░░▒▒▒▒▒▒▒░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
@@ -31,7 +31,9 @@ header() {
 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 $_divider
-Website: https://niiwin.app
+$1 created successfully!
+Run: docker compose up
+Then access your new app at: http://localhost:8000
 $_divider
 
 EOF
@@ -64,8 +66,6 @@ need_cmd() {
 check_cmd() {
     command -v "$1" > /dev/null 2>&1
 }
-
-header
 
 if (( $# != 1 )); then
     err "Usage: ./bootstrap.sh -s your_app_name"
@@ -123,6 +123,5 @@ docker compose up --build --detach --remove-orphans
 # Build js and css assets
 ./run yarn:install
 ./run yarn:build
-# Restart the containers without detaching so that we can see the logs
-docker compose down
-docker compose up --remove-orphans
+
+niiwin_ascii $name
