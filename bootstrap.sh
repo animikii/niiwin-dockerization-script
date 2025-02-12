@@ -120,9 +120,6 @@ git commit -am "Initial commit"
 docker compose up --build --detach --remove-orphans
 # Create and seed database
 ./run rails db:setup
-# Build js and css assets
-./run yarn:install
-./run yarn:build
 # Restart the containers without detaching so that we can see the logs
 docker compose down
 docker compose up --remove-orphans
