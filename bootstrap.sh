@@ -87,7 +87,7 @@ if lsof -Pi :8000 -sTCP:LISTEN -t >/dev/null ; then
     err "port 8000 is already in use."
 fi
 
-latest_niiwin_version="3.2.0" # Change this to the latest available template
+latest_niiwin_version="3.2.1" # Change this to the latest available template
 
 printf "%s Cloning the source template for niiwin $latest_niiwin_version into $name\n"
 git clone git@github.com:animikii/dockerized-niiwin.git $name
